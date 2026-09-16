@@ -1,0 +1,7 @@
+{
+  "name": "MovieVault",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
