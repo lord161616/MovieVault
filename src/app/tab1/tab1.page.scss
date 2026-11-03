@@ -1,0 +1,36 @@
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+.form-container h1 {
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.description {
+  margin-bottom: 24px;
+  color: var(--ion-color-medium);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+ion-item {
+  margin-top: 8px;
+}
+
+ion-note {
+  display: block;
+  margin-left: 16px;
+  margin-top: 2px;
+}
+
+ion-button {
+  margin-top: 24px;
+}

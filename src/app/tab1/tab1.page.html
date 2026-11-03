@@ -1,17 +1,163 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
     <ion-title>
-      Tab 1
+      Add Movie
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <div class="form-container">
+
+    <h1>Add a Movie</h1>
+
+    <p class="description">
+      Enter the movie information below.
+    </p>
+
+    <form
+      [formGroup]="movieForm"
+      (ngSubmit)="addMovie()"
+    >
+
+      <!-- TITLE -->
+      <ion-item>
+        <ion-label position="stacked">
+          Movie Title
+        </ion-label>
+
+        <ion-input
+          type="text"
+          formControlName="title"
+          placeholder="Enter movie title">
+        </ion-input>
+      </ion-item>
+
+      <ion-note
+        color="danger"
+        *ngIf="isInvalid('title')">
+        Movie title is required.
+      </ion-note>
+
+
+      <!-- DIRECTOR -->
+      <ion-item>
+        <ion-label position="stacked">
+          Director
+        </ion-label>
+
+        <ion-input
+          type="text"
+          formControlName="director"
+          placeholder="Enter director">
+        </ion-input>
+      </ion-item>
+
+      <ion-note
+        color="danger"
+        *ngIf="isInvalid('director')">
+        Director is required.
+      </ion-note>
+
+
+      <!-- GENRE -->
+      <ion-item>
+        <ion-label position="stacked">
+          Genre
+        </ion-label>
+
+        <ion-input
+          type="text"
+          formControlName="genre"
+          placeholder="e.g. Action, Sci-Fi, Drama">
+        </ion-input>
+      </ion-item>
+
+      <ion-note
+        color="danger"
+        *ngIf="isInvalid('genre')">
+        Genre is required.
+      </ion-note>
+
+
+      <!-- RELEASE YEAR -->
+      <ion-item>
+        <ion-label position="stacked">
+          Release Year
+        </ion-label>
+
+        <ion-input
+          type="number"
+          formControlName="releaseYear"
+          placeholder="Enter release year">
+        </ion-input>
+      </ion-item>
+
+      <ion-note
+        color="danger"
+        *ngIf="isInvalid('releaseYear')">
+        Enter a valid release year.
+      </ion-note>
+
+
+      <!-- RATING -->
+      <ion-item>
+        <ion-label position="stacked">
+          Rating
+        </ion-label>
+
+        <ion-input
+          type="number"
+          formControlName="rating"
+          min="0"
+          max="10"
+          step="0.1"
+          placeholder="0 - 10">
+        </ion-input>
+      </ion-item>
+
+      <ion-note
+        color="danger"
+        *ngIf="isInvalid('rating')">
+        Rating must be between 0 and 10.
+      </ion-note>
+
+
+      <!-- STATUS -->
+      <ion-item>
+        <ion-label position="stacked">
+          Status
+        </ion-label>
+
+        <ion-select
+          formControlName="status"
+          interface="popover">
+
+          <ion-select-option
+            *ngFor="let status of statuses"
+            [value]="status">
+
+            {{ status }}
+
+          </ion-select-option>
+
+        </ion-select>
+      </ion-item>
+
+
+      <!-- SUBMIT -->
+      <ion-button
+        type="submit"
+        expand="block"
+        [disabled]="isSaving">
+
+        {{ isSaving ? 'Saving...' : 'Add Movie' }}
+
+      </ion-button>
+
+    </form>
+
+  </div>
+
 </ion-content>

@@ -1,17 +1,521 @@
-<ion-header [translucent]="true">
+
+<ion-header>
   <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+    <ion-title>Movies</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <div class="movies-container">
+
+    <h1>MovieVault Movies</h1>
+
+    <ion-searchbar
+      [(ngModel)]="searchTerm"
+      placeholder="Search title, director, or genre"
+      aria-label="Search movies"
+    ></ion-searchbar>
+
+    <ion-segment
+      [(ngModel)]="selectedStatus"
+      scrollable="true"
+      aria-label="Filter movies by status"
+    >
+      <ion-segment-button value="All">
+        <ion-label>All</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Watching">
+        <ion-label>Watching</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Watched">
+        <ion-label>Watched</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Plan to Watch">
+        <ion-label>Plan to Watch</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <ion-loading
+      [isOpen]="loading || updating || deletingMovieId !== null"
+      message="Working..."
+    ></ion-loading>
+
+
+    <!-- ======================================================
+         LOADING STATE
+         ====================================================== -->
+
+    <div
+      *ngIf="loading"
+      class="loading-container"
+    >
+
+      <ion-spinner></ion-spinner>
+
+      <p>
+        Loading movies...
+      </p>
+
+    </div>
+
+
+    <!-- ======================================================
+         ERROR MESSAGE
+         ====================================================== -->
+
+    <div
+      *ngIf="!loading && errorMessage"
+      class="error-message"
+    >
+
+      <ion-text color="danger">
+        {{ errorMessage }}
+      </ion-text>
+
+    </div>
+
+
+    <!-- ======================================================
+         DELETE SUCCESS MESSAGE
+         ====================================================== -->
+
+    <div
+      *ngIf="!loading && deleteMessage"
+      class="success-message"
+    >
+
+      <ion-text color="success">
+        {{ deleteMessage }}
+      </ion-text>
+
+    </div>
+
+
+    <!-- ======================================================
+         MOVIE CONTENT
+         ====================================================== -->
+
+    <div *ngIf="!loading">
+
+      <p class="movie-count">
+
+        Number of movies:
+        <strong>{{ filteredMovies.length }}</strong>
+
+      </p>
+
+
+      <!-- ====================================================
+           EMPTY STATE
+           ==================================================== -->
+
+      <div
+        *ngIf="filteredMovies.length === 0"
+        class="empty-state"
+      >
+
+        <h2>No Movies Found</h2>
+
+        <p>
+          There are currently no movies in your collection.
+        </p>
+
+      </div>
+
+
+      <!-- ====================================================
+           MOVIE LIST
+           ==================================================== -->
+
+      <div
+        *ngFor="let movie of filteredMovies"
+        class="movie-card"
+      >
+
+
+        <!-- ==================================================
+             NORMAL MOVIE VIEW
+             ================================================== -->
+
+        <div *ngIf="editingMovieId !== movie.id">
+
+          <h2>
+            {{ movie.title }}
+          </h2>
+
+          <p>
+            <strong>Director:</strong>
+            {{ movie.director }}
+          </p>
+
+          <p>
+            <strong>Genre:</strong>
+            {{ movie.genre }}
+          </p>
+
+          <p>
+            <strong>Release Year:</strong>
+            {{ movie.releaseYear }}
+          </p>
+
+          <p>
+            <strong>Rating:</strong>
+            {{ movie.rating }}/10
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            {{ movie.status }}
+          </p>
+
+
+          <!-- ==================================================
+               MOVIE ACTION BUTTONS
+               ================================================== -->
+
+          <div class="movie-actions">
+
+            <!-- EDIT BUTTON -->
+
+            <ion-button
+              size="small"
+              (click)="startEdit(movie)"
+              [disabled]="deletingMovieId !== null"
+            >
+
+              Edit
+
+            </ion-button>
+
+
+            <!-- DELETE BUTTON -->
+
+            <ion-button
+              size="small"
+              color="danger"
+              (click)="confirmDelete(movie)"
+              [disabled]="deletingMovieId !== null"
+            >
+
+              <ion-spinner
+                *ngIf="deletingMovieId === movie.id"
+              ></ion-spinner>
+
+              <span
+                *ngIf="deletingMovieId !== movie.id"
+              >
+                Delete
+              </span>
+
+              <span
+                *ngIf="deletingMovieId === movie.id"
+              >
+                Deleting...
+              </span>
+
+            </ion-button>
+
+          </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             EDIT MOVIE FORM
+             ================================================== -->
+
+        <div
+          *ngIf="false && editingMovieId === movie.id"
+          class="edit-form"
+        >
+
+          <h2>
+            Edit Movie
+          </h2>
+
+
+          <!-- TITLE -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Title
+            </ion-label>
+
+            <ion-input
+              type="text"
+              [(ngModel)]="editMovie.title"
+            ></ion-input>
+
+          </ion-item>
+
+
+          <!-- DIRECTOR -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Director
+            </ion-label>
+
+            <ion-input
+              type="text"
+              [(ngModel)]="editMovie.director"
+            ></ion-input>
+
+          </ion-item>
+
+
+          <!-- GENRE -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Genre
+            </ion-label>
+
+            <ion-input
+              type="text"
+              [(ngModel)]="editMovie.genre"
+            ></ion-input>
+
+          </ion-item>
+
+
+          <!-- RELEASE YEAR -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Release Year
+            </ion-label>
+
+            <ion-input
+              type="number"
+              [(ngModel)]="editMovie.releaseYear"
+            ></ion-input>
+
+          </ion-item>
+
+
+          <!-- RATING -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Rating
+            </ion-label>
+
+            <ion-input
+              type="number"
+              min="0"
+              max="10"
+              step="0.1"
+              [(ngModel)]="editMovie.rating"
+            ></ion-input>
+
+          </ion-item>
+
+
+          <!-- STATUS -->
+
+          <ion-item>
+
+            <ion-label position="stacked">
+              Status
+            </ion-label>
+
+            <ion-select
+              [(ngModel)]="editMovie.status"
+            >
+
+              <ion-select-option value="Watching">
+                Watching
+              </ion-select-option>
+
+              <ion-select-option value="Watched">
+                Watched
+              </ion-select-option>
+
+              <ion-select-option value="Plan to Watch">
+                Plan to Watch
+              </ion-select-option>
+
+            </ion-select>
+
+          </ion-item>
+
+
+          <!-- UPDATE MESSAGE -->
+
+          <p
+            *ngIf="updateMessage"
+            class="success-message"
+          >
+
+            {{ updateMessage }}
+
+          </p>
+
+
+          <!-- EDIT BUTTONS -->
+
+          <div class="edit-buttons">
+
+            <ion-button
+              expand="block"
+              (click)="saveEdit()"
+              [disabled]="updating || deletingMovieId !== null"
+            >
+
+              <ion-spinner
+                *ngIf="updating"
+              ></ion-spinner>
+
+              <span *ngIf="!updating">
+                Save Changes
+              </span>
+
+              <span *ngIf="updating">
+                Saving...
+              </span>
+
+            </ion-button>
+
+
+            <ion-button
+              expand="block"
+              fill="outline"
+              color="medium"
+              (click)="cancelEdit()"
+              [disabled]="updating || deletingMovieId !== null"
+            >
+
+              Cancel
+
+            </ion-button>
+
+          </div>
+
+        </div>
+
+
+        <hr>
+
+      </div>
+
+
+      <!-- ====================================================
+           RELOAD BUTTON
+           ==================================================== -->
+
+      <ion-button
+        expand="block"
+        (click)="loadMovies()"
+        [disabled]="loading || deletingMovieId !== null"
+      >
+
+        Reload Movies
+
+      </ion-button>
+
+    </div>
+
+  </div>
+
+  <ion-modal
+    [isOpen]="isEditModalOpen"
+    (didDismiss)="cancelEdit()"
+  >
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Edit Movie</ion-title>
+          <ion-button
+            slot="end"
+            fill="clear"
+            (click)="cancelEdit()"
+            aria-label="Close edit movie dialog"
+          >
+            Close
+          </ion-button>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <ion-item>
+          <ion-label position="stacked">Title</ion-label>
+          <ion-input [(ngModel)]="editMovie.title" type="text"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Director</ion-label>
+          <ion-input [(ngModel)]="editMovie.director" type="text"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Genre</ion-label>
+          <ion-input [(ngModel)]="editMovie.genre" type="text"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Release Year</ion-label>
+          <ion-input
+            [(ngModel)]="editMovie.releaseYear"
+            type="number"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Rating</ion-label>
+          <ion-input
+            [(ngModel)]="editMovie.rating"
+            type="number"
+            min="0"
+            max="10"
+            step="0.1"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Status</ion-label>
+          <ion-select [(ngModel)]="editMovie.status">
+            <ion-select-option value="Watching">Watching</ion-select-option>
+            <ion-select-option value="Watched">Watched</ion-select-option>
+            <ion-select-option value="Plan to Watch">
+              Plan to Watch
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          (click)="saveEdit()"
+          [disabled]="updating"
+        >
+          {{ updating ? 'Saving...' : 'Save Changes' }}
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="medium"
+          (click)="cancelEdit()"
+          [disabled]="updating"
+        >
+          Cancel
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-toast
+    [isOpen]="isToastOpen"
+    [message]="toastMessage"
+    [duration]="2500"
+    (didDismiss)="dismissToast()"
+  ></ion-toast>
+
 </ion-content>
+
