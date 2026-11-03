@@ -1,0 +1,83 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------- CI: runs on a GitHub-hosted Windows runner ----------------
+  continuous-integration:
+    name: Continuous Integration
+    runs-on: windows-latest
+    env:
+      CI: true
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run automated tests
+        run: npm test --if-present -- --watch=false --browsers=ChromeHeadless
+
+      - name: Build application
+        run: npm run build
+
+  # ---------------- CD: runs on YOUR Windows self-hosted runner ----------------
+  continuous-deployment:
+    name: Continuous Deployment
+    needs: continuous-integration
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, Windows, X64]
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Check Docker access
+        run: docker info
+
+      - name: Build Ionic image
+        run: docker build -t ionic-crud:latest .
+
+      - name: Remove previous container
+        run: docker rm -f ionic-crud
+        continue-on-error: true
+
+      - name: Start updated container
+        run: docker run -d --name ionic-crud --restart unless-stopped -p 8100:8100 ionic-crud:latest
+
+      - name: Verify app
+        run: |
+          $success = $false
+          for ($i = 1; $i -le 60; $i++) {
+            try {
+              Invoke-WebRequest http://localhost:8100/ -UseBasicParsing -TimeoutSec 5 | Out-Null
+              $success = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+          if (-not $success) {
+            docker logs ionic-crud
+            exit 1
+          }
+          Write-Host "App is running at http://localhost:8100"
